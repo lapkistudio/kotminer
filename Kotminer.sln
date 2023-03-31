@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9015E868-2B63-47C6-9132-1C37A4D7E6B2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kotminer.Scrapper", "src\Kotminer.Scrapper\Kotminer.Scrapper.csproj", "{0E098AF0-4A30-443F-834F-4768A5DADAC7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kotminer.Aggregator", "src\Kotminer.Aggregator\Kotminer.Aggregator.csproj", "{65992B38-C88E-45F1-B506-CCEFFD7D3B95}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0E098AF0-4A30-443F-834F-4768A5DADAC7} = {9015E868-2B63-47C6-9132-1C37A4D7E6B2}
+		{65992B38-C88E-45F1-B506-CCEFFD7D3B95} = {9015E868-2B63-47C6-9132-1C37A4D7E6B2}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0E098AF0-4A30-443F-834F-4768A5DADAC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E098AF0-4A30-443F-834F-4768A5DADAC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E098AF0-4A30-443F-834F-4768A5DADAC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E098AF0-4A30-443F-834F-4768A5DADAC7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65992B38-C88E-45F1-B506-CCEFFD7D3B95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65992B38-C88E-45F1-B506-CCEFFD7D3B95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65992B38-C88E-45F1-B506-CCEFFD7D3B95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65992B38-C88E-45F1-B506-CCEFFD7D3B95}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
