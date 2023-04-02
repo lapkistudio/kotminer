@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Kotminer.Scrapper.Models;
+namespace Kotminer.Scrapper.Dvch.Models;
 
 public class Thread
 {

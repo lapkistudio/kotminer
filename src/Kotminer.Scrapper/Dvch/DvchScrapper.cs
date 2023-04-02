@@ -1,48 +1,68 @@
-﻿using System.Text.Json;
-using Kotminer.Scrapper.Models;
-using Newtonsoft.Json;
-using Wakaba2ChApiClient.Impl;
+﻿using System.Text;
+using System.Text.RegularExpressions;
+using Kotminer.Scrapper.Dvch.Models;
 using JsonSerializer = System.Text.Json.JsonSerializer;
-using Thread = Kotminer.Scrapper.Models.Thread;
-using Wakaba2ChApiClient = Wakaba2ChApiClient.Wakaba2ChApiClient;
+using Thread = Kotminer.Scrapper.Dvch.Models.Thread;
 
-namespace Kotminer.Scrapper;
+namespace Kotminer.Scrapper.Dvch;
 
-public class DvchScrapper
+public class DvchScrapper : IScrapper
 {
     private readonly HttpClient _client = new HttpClient();
+    private readonly string _board;
+    private StringBuilder _result = new StringBuilder();
+    private readonly Regex _regex;
 
-    public DvchScrapper()
+    public DvchScrapper(string board, Regex regex)
     {
+        _board = board;
+        _regex = regex;
         _client = new HttpClient()
         {
             BaseAddress = new Uri("https://2ch.hk/")
         };
     }
     
-    public async Task GetData(string t)
+    public async Task Scrap()
     {
-        if(!File.Exists($"../../../{t}.output.txt"))
-            File.Create($"../../../{t}.output.txt").Close();
+        var data = await _client.GetAsync($"{_board}/threads.json");
+        var boardData = await JsonSerializer.DeserializeAsync<BoardData>(await data.Content.ReadAsStreamAsync());
         
-        var data = await _client.GetAsync($"{t}/threads.json");
-        var threadsFromBoard = await JsonSerializer.DeserializeAsync<BoardData>(await data.Content.ReadAsStreamAsync());
-        if (threadsFromBoard is null)
+        Console.WriteLine($"Start Scrapping the {_board} board!");
+
+        if (boardData?.Threads is null)
             return;
         
-        foreach (var thread in threadsFromBoard.Threads.Where(x => x != null))
+        foreach (var thread in boardData.Threads)
         {
-            var request = await _client.GetAsync($"api/mobile/v2/after/{t}/{thread.Num}/{thread.Num}");
-            var threadData = await JsonSerializer.DeserializeAsync<Thread>(await request.Content.ReadAsStreamAsync());
-            if (threadData is null)
-                return;
+            if (thread is null)
+                continue;
+        
+            var threadDataResponse = await _client.GetAsync($"api/mobile/v2/after/{_board}/{thread.Num}/{thread.Num}");
+            var threadData = await JsonSerializer.DeserializeAsync<Thread>(await threadDataResponse.Content.ReadAsStreamAsync());
+
+            if (threadData?.Posts is null) 
+                continue;
             
-            foreach (var post in threadData.Posts.Where(x => x != null))
+            Console.WriteLine($"Start Scrapping the {thread.Num} thread with {threadData.Posts.Length} number of posts!");
+                
+            foreach (var post in threadData.Posts)
             {
-                await File.AppendAllTextAsync($"../../../{t}.output.txt", post.Comment + "\n");
-                Console.WriteLine($"--- thread parsed {thread.Num}");
-                Console.WriteLine(post.Comment);
+                if(post is null)
+                    continue;
+
+                var filteredData = _regex.Replace(post.Comment, " ");
+                _result.Append(filteredData.Trim()).AppendLine("\n");
+                Console.WriteLine($"\t Parsed the Post {post.Num} with following content: \n\t{filteredData}");
             }
         }
-    } 
+    }
+
+    public async Task Save()
+    {
+        if(!Directory.Exists("../../../dvch"))
+            Directory.CreateDirectory("../../../dvch");
+        
+        await File.AppendAllTextAsync($"../../../dvch/{_board}.output.txt", _result.ToString());
+    }
 }
