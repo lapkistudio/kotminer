@@ -1,5 +1,22 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Globalization;
+using System.Text;
+using System.Text.RegularExpressions;
 using Kotminer.Scrapper.Dvch;
+using Microsoft.Extensions.Logging;
+
+using var loggerFactory = LoggerFactory.Create(builder =>
+{
+    builder
+        .AddFilter("Microsoft", LogLevel.Warning)
+        .AddFilter("System", LogLevel.Warning)
+        .AddFilter("LoggingConsoleApp.Program", LogLevel.Debug)
+        .AddConsole();
+});
+
+var logger = loggerFactory.CreateLogger<Program>();
+
+
+logger.LogInformation("ОВвошу");
 
 var boards = new string[]
 {
@@ -16,9 +33,9 @@ var boards = new string[]
     "d", "b", "soc", "rf" 
 };
 
-await Parallel.ForEachAsync(boards, async (board, _) =>
+await Parallel.ForEachAsync(boards[..10], async (board, _) =>
 {
-    var scrapper = new DvchScrapper(board, new Regex("[a-zA-Z<>\\\"\\/\\;\\.\\#\\=\\-\\(\\)&]|\\d{6,}"));
-    await scrapper.Scrap();
+    var scrapper = new DvchScrapper(board, new Regex("<.*?>|>>\\d+"));
+    await scrapper.Scrap(logger);
     await scrapper.Save();
 });

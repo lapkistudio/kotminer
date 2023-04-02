@@ -1,7 +1,9 @@
-﻿namespace Kotminer.Scrapper;
+﻿using Microsoft.Extensions.Logging;
+
+namespace Kotminer.Scrapper;
 
 public interface IScrapper
 {
-    public Task Scrap();
+    public Task Scrap(ILogger logger);
     public Task Save();
 }

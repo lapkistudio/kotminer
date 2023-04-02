@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Text.RegularExpressions;
 using Kotminer.Scrapper.Dvch.Models;
+using Microsoft.Extensions.Logging;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 using Thread = Kotminer.Scrapper.Dvch.Models.Thread;
 
@@ -10,25 +11,28 @@ public class DvchScrapper : IScrapper
 {
     private readonly HttpClient _client = new HttpClient();
     private readonly string _board;
-    private StringBuilder _result = new StringBuilder();
+    private StringBuilder _result;
+
     private readonly Regex _regex;
 
     public DvchScrapper(string board, Regex regex)
     {
         _board = board;
         _regex = regex;
+        _result = new StringBuilder();
         _client = new HttpClient()
         {
             BaseAddress = new Uri("https://2ch.hk/")
         };
     }
     
-    public async Task Scrap()
+    public async Task Scrap(ILogger logger)
     {
         var data = await _client.GetAsync($"{_board}/threads.json");
         var boardData = await JsonSerializer.DeserializeAsync<BoardData>(await data.Content.ReadAsStreamAsync());
+        var threadNum = 0;
         
-        Console.WriteLine($"Start Scrapping the {_board} board!");
+        logger.LogInformation($"Start Scrapping the {_board} board!");
 
         if (boardData?.Threads is null)
             return;
@@ -44,17 +48,24 @@ public class DvchScrapper : IScrapper
             if (threadData?.Posts is null) 
                 continue;
             
-            Console.WriteLine($"Start Scrapping the {thread.Num} thread with {threadData.Posts.Length} number of posts!");
-                
+            logger.LogInformation($"Start Scrapping the {thread.Num} thread with {threadData.Posts.Length} number of posts!");
+
+            var prompts = new Dictionary<int, string>();
             foreach (var post in threadData.Posts)
             {
                 if(post is null)
                     continue;
+                
+                if(!prompts.ContainsKey(post.Num))
+                    prompts.Add(post.Num, _regex.Replace(post.Comment, ""));
+                
+                foreach (var prompt in prompts.Where(prompt => post.Comment.Contains(prompt.Key.ToString())))
+                    _result.Append(@"{ ""prompt"": """ + prompt.Value + @""", ""completion"":  """ + prompts[post.Num] + @""" }" + "\n");
 
-                var filteredData = _regex.Replace(post.Comment, " ");
-                _result.Append(filteredData.Trim()).AppendLine("\n");
-                Console.WriteLine($"\t Parsed the Post {post.Num} with following content: \n\t{filteredData}");
+                logger.LogInformation($"\t{threadNum}: Parsed the Post {post.Num} in the {thread.Num} thread, board {_board}, overall {boardData.Threads.Length}: \n\t", Encoding.UTF8);
             }
+
+            threadNum++;
         }
     }
 
@@ -63,6 +74,9 @@ public class DvchScrapper : IScrapper
         if(!Directory.Exists("../../../dvch"))
             Directory.CreateDirectory("../../../dvch");
         
-        await File.AppendAllTextAsync($"../../../dvch/{_board}.output.txt", _result.ToString());
+        await File.AppendAllTextAsync($"../../../dvch/{_board}.output.jsonl", _result.ToString()
+            .Replace("(OP)", "")
+            .Replace("&gt;", "")
+            .Replace("&quot;", ""));
     }
 }
