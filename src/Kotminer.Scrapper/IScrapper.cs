@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Kotminer.Scrapper.Dvch;
+using Microsoft.Extensions.Logging;
 
 namespace Kotminer.Scrapper;
 

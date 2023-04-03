@@ -16,7 +16,6 @@ using var loggerFactory = LoggerFactory.Create(builder =>
 var logger = loggerFactory.CreateLogger<Program>();
 
 
-logger.LogInformation("ОВвошу");
 
 var boards = new string[]
 {
@@ -33,9 +32,9 @@ var boards = new string[]
     "d", "b", "soc", "rf" 
 };
 
-await Parallel.ForEachAsync(boards[..10], async (board, _) =>
+await Parallel.ForEachAsync(boards, async (board, _) =>
 {
-    var scrapper = new DvchScrapper(board, new Regex("<.*?>|>>\\d+"));
+    var scrapper = new DvchScrapper(board, new Regex("<.*?>|>>\\d+"), DataType.XTuringModel);
     await scrapper.Scrap(logger);
     await scrapper.Save();
 });
